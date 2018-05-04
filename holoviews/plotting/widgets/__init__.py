@@ -124,9 +124,15 @@ class NdWidget(param.Parameterized):
             self.renderer = Store.renderers[backend]
         else:
             self.renderer = renderer
+
         # Create mock NdMapping to hold the common dimensions and keys
+        sorted_dims = []
+        for dim in self.dimensions:
+            if dim.values and all(isnumeric(v) for v in dim.values):
+                dim = dim.clone(values=sorted(dim.values))
+            sorted_dims.append(dim)
         self.mock_obj = NdMapping([(k, None) for k in self.keys],
-                                  kdims=list(self.dimensions), sort=False)
+                                  kdims=sorted_dims, sort=False)
 
         NdWidget.widgets[self.id] = self
 
@@ -378,7 +384,7 @@ class SelectionWidget(NdWidget):
                 # Widgets currently detect dynamic mode by type
                 # this value representation is now redundant
                 # and should be removed in a refactor
-                values = sorted(dim.values)
+                values = dim.values
                 dim_vals = {i: i for i, v in enumerate(values)}
                 widget_type = 'slider'
                 value_labels = escape_list(escape_vals([dim.pprint_value(v)
